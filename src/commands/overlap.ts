@@ -8,7 +8,7 @@ export class OverlapCommand implements Command {
     constructor() {
         this.labels = ['overlap']
     }
-    handle(stack: Layer[], label: string, args: any[]): void {
+    async handle(stack: Layer[], label: string, args: any[]): Promise<void> {
         const n = args[0] || 2
         const layers = stack.splice(stack.length - n, n)
         const result = new OverlapLayer(layers)

@@ -8,7 +8,7 @@ export class TextCommand implements Command {
     constructor() {
         this.labels = ['text']
     }
-    handle(stack: Layer[], label: string, args: any[]): void {
+    async handle(stack: Layer[], label: string, args: any[]): Promise<void> {
         const [text, size, font] = args
         const result = new TextLayer(text)
         result.size = size || result.size

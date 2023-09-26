@@ -1234,7 +1234,7 @@ export interface TraceEvent {
 
 declare class _DefaultTracer {
   private indentLevel: number;
-  public trace(event: TraceEvent): void;
+  public trace(event: TraceEvent): Promise<void>;
 }
 
 peggyParser.SyntaxError.prototype.name = "PeggySyntaxError";

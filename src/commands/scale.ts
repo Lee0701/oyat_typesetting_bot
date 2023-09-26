@@ -8,9 +8,9 @@ export class ScaleCommand implements Command {
     constructor() {
         this.labels = ['scale']
     }
-    handle(stack: Layer[], label: string, args: any[]): void {
+    async handle(stack: Layer[], label: string, args: any[]): Promise<void> {
         const sx = args[0] || 1
-        const sy = args[1] || 1
+        const sy = args[1] || sx
         const layer = stack.pop() as Layer
         const result = new ScaleLayer(layer, sx, sy)
         stack.push(result)

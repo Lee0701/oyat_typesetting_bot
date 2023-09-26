@@ -13,7 +13,7 @@ export class TextLayer implements Layer {
         this.text = text
         this.x = 0
         this.y = 0
-        this.size = 12
+        this.size = 256
         this.font = 'sans-serif'
         this.direction = 'horizontal'
     }

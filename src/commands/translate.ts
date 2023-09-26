@@ -8,9 +8,9 @@ export class TranslateCommand implements Command {
     constructor() {
         this.labels = ['translate']
     }
-    handle(stack: Layer[], label: string, args: any[]): void {
-        const dx = args[0] || 2
-        const dy = args[1] || 2
+    async handle(stack: Layer[], label: string, args: any[]): Promise<void> {
+        const dx = args[0] || 0
+        const dy = args[1] || 0
         const layer = stack.pop() as Layer
         const result = new TranslateLayer(layer, dx, dy)
         stack.push(result)

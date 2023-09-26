@@ -1,4 +1,5 @@
 export { TextCommand } from './text'
+export { ImageCommand } from './image'
 export { TranslateCommand } from './translate'
 export { ScaleCommand } from './scale'
 export { OverlapCommand } from './overlap'

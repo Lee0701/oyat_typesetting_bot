@@ -11,11 +11,12 @@ import * as Commands from './commands'
 
 export interface Command {
     labels: string[]
-    handle(stack: Layer[], label: string, args: any[]): void
+    handle(stack: Layer[], label: string, args: any[]): Promise<void>
 }
 
 export const commands: Command[] = [
     new Commands.TextCommand(),
+    new Commands.ImageCommand(),
     new Commands.TranslateCommand(),
     new Commands.ScaleCommand(),
     new Commands.OverlapCommand(),
@@ -38,10 +39,11 @@ export async function handleCommand(ctx: Context) {
     const g = canvas.getContext('2d')
 
     const stack: Layer[] = []
-    parsedCommands.forEach(({label, args}) => {
+    for(const cmd of parsedCommands) {
+        const {label, args} = cmd
         const command = commandMap[label]
-        command.handle(stack, label, args)
-    })
+        await command.handle(stack, label, args)
+    }
     const result = stack.pop() || new EmptyLayer()
     result.render(g)
 

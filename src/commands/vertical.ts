@@ -10,7 +10,7 @@ export class VerticalCommand implements Command {
     constructor() {
         this.labels = ['vertical']
     }
-    handle(stack: Layer[], label: string, args: any[]): void {
+    async handle(stack: Layer[], label: string, args: any[]): Promise<void> {
         const n = args[0] || 2
         const layers = stack.splice(stack.length - n, n)
                 .map((layer) => new ScaleLayer(layer, 1, 1 / n))
