@@ -3,7 +3,7 @@ import { Command } from '../command_handler'
 import { Layer } from '../layers/layer'
 import { TranslateLayer } from '../layers/translate'
 
-export class CommandTranslate implements Command {
+export class TranslateCommand implements Command {
     labels: string[]
     constructor() {
         this.labels = ['translate']

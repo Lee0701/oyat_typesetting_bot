@@ -3,7 +3,7 @@ import { Command } from '../command_handler'
 import { Layer } from '../layers/layer'
 import { ScaleLayer } from '../layers/scale'
 
-export class CommandScale implements Command {
+export class ScaleCommand implements Command {
     labels: string[]
     constructor() {
         this.labels = ['scale']

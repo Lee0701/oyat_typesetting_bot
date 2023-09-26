@@ -5,11 +5,9 @@ import sharp from 'sharp'
 import { parse } from './command_parser'
 
 import { Layer } from './layers/layer'
-import { EmptyLayer } from './layers/empty'
-import { CommandText } from './commands/text'
-import { CommandOverlap } from './commands/overlap'
-import { CommandTranslate } from './commands/translate'
-import { CommandScale } from './commands/scale'
+import { EmptyLayer } from './layers'
+
+import * as Commands from './commands'
 
 export interface Command {
     labels: string[]
@@ -17,10 +15,12 @@ export interface Command {
 }
 
 export const commands: Command[] = [
-    new CommandText(),
-    new CommandTranslate(),
-    new CommandScale(),
-    new CommandOverlap(),
+    new Commands.TextCommand(),
+    new Commands.TranslateCommand(),
+    new Commands.ScaleCommand(),
+    new Commands.OverlapCommand(),
+    new Commands.HorizontalCommand(),
+    new Commands.VerticalCommand(),
 ]
 export const commandMap: { [label: string]: Command } = Object.fromEntries(
         commands.flatMap((command) => command.labels.map((label) => [label, command])))
