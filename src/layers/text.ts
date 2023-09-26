@@ -4,31 +4,38 @@ import { Layer } from './layer'
 
 export class TextLayer implements Layer {
     text: string
-    x: number
-    y: number
-    size: number
+    weight: string
+    color: string
     font: string
-    direction: string
+    stroke: number
     constructor(text: string) {
         this.text = text
-        this.x = 0
-        this.y = 0
-        this.size = 256
+        this.weight = 'normal'
+        this.color = '#000000'
         this.font = 'sans-serif'
-        this.direction = 'horizontal'
+        this.stroke = 0
     }
     render(ctx: CanvasRenderingContext2D): void {
-        ctx.font = `${this.size}px ${this.font}`
-        ctx.fillText(this.text, this.x, this.y)
+        ctx.save()
+        const size = ctx.canvas.height
+        ctx.font = `${this.weight} ${size}px ${this.font}`
+        if(this.stroke == 0) {
+            ctx.fillStyle = this.color
+            ctx.fillText(this.text, 0, 0)
+        } else {
+            ctx.strokeStyle = this.color
+            ctx.lineWidth = this.stroke
+            ctx.lineJoin = 'round'
+            ctx.lineCap = 'round'
+            ctx.strokeText(this.text, 0, 0)
+        }
+        ctx.restore()
     }
     clone(): TextLayer {
-        const {text, x, y, size, font, direction} = this
-        const result = new TextLayer(text)
-        result.x = x
-        result.y = y
-        result.size = size
-        result.font = font
-        result.direction = direction
+        const result = new TextLayer(this.text)
+        result.color = this.color
+        result.font = this.font
+        result.stroke = this.stroke
         return result
     }
 }
