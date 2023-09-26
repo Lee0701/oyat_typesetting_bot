@@ -1,4 +1,9 @@
 
+import { Context, Input } from 'telegraf'
+import { createCanvas } from 'canvas'
+import sharp from 'sharp'
+import { parse } from './command_parser'
+
 import { Layer } from './layers/layer'
 import { EmptyLayer } from './layers/empty'
 import { CommandText } from './commands/text'
@@ -24,11 +29,21 @@ export interface ParsedCommand {
     args: any[]
 }
 
-export function handleCommand(parsedCommands: ParsedCommand[]): Layer {
+export async function handleCommand(ctx: Context) {
+    if(!ctx.message || !('text' in ctx.message)) return
+    const parsedCommands = parse(ctx.message.text)
+    const canvas = createCanvas(512, 512)
+    const g = canvas.getContext('2d')
+
     const stack: Layer[] = []
     parsedCommands.forEach(({label, args}) => {
         const command = commandMap[label]
         command.handle(stack, label, args)
     })
-    return stack.pop() || new EmptyLayer()
+    const result = stack.pop() || new EmptyLayer()
+    result.render(g)
+
+    const png = canvas.toBuffer('image/png')
+    const webp = await sharp(png).ensureAlpha(0).webp({lossless: true}).toBuffer()
+    await ctx.replyWithSticker(Input.fromBuffer(webp))
 }
