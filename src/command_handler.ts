@@ -45,6 +45,7 @@ export async function handleCommand(ctx: Context) {
         for(const cmd of parsedCommands) {
             const {label, args} = cmd
             const command = commandMap[label]
+            if(!command) throw new Error(`Unknown command: ${label}`)
             await command.handle(stack, label, args)
         }
         const result = stack.pop() || new EmptyLayer()
