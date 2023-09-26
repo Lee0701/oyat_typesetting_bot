@@ -1,14 +1,17 @@
 
-import { Document } from './document'
+import { Layer } from './layers/layer'
+import { EmptyLayer } from './layers/empty'
 import { CommandText } from './commands/text'
+import { CommandOverlap } from './commands/overlap'
 
 export interface Command {
     labels: string[]
-    handle(doc: Document, label: string, args: any[]): Document
+    handle(stack: Layer[], label: string, args: any[]): void
 }
 
 export const commands: Command[] = [
     new CommandText(),
+    new CommandOverlap(),
 ]
 export const commandMap: { [label: string]: Command } = Object.fromEntries(
         commands.flatMap((command) => command.labels.map((label) => [label, command])))
@@ -19,6 +22,11 @@ export interface ParsedCommand {
     args: any[]
 }
 
-export function handleCommand(parsedCommands: ParsedCommand[]): Document {
-    return parsedCommands.reduce((acc: Document, cmd: ParsedCommand) => commandMap[cmd.label].handle(acc, cmd.label, cmd.args), new Document([]))
+export function handleCommand(parsedCommands: ParsedCommand[]): Layer {
+    const stack: Layer[] = []
+    parsedCommands.forEach(({label, args}) => {
+        const command = commandMap[label]
+        command.handle(stack, label, args)
+    })
+    return stack.pop() || new EmptyLayer()
 }

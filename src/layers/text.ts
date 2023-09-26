@@ -2,7 +2,7 @@
 import { CanvasRenderingContext2D } from 'canvas'
 import { Layer } from './layer'
 
-export class LayerText implements Layer {
+export class TextLayer implements Layer {
     text: string
     x: number
     y: number
@@ -21,9 +21,9 @@ export class LayerText implements Layer {
         ctx.font = `${this.size}px ${this.font}`
         ctx.fillText(this.text, this.x, this.y)
     }
-    clone(): LayerText {
+    clone(): TextLayer {
         const {text, x, y, size, font, direction} = this
-        const result = new LayerText(text, x, y, size)
+        const result = new TextLayer(text, x, y, size)
         result.font = font
         result.direction = direction
         return result
