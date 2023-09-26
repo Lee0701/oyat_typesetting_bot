@@ -10,9 +10,12 @@ export class ImageCommand implements Command {
         this.labels = ['image']
     }
     async handle(stack: Layer[], label: string, args: any[]): Promise<void> {
-        const n = args[0]
-        if(!n) return
-        const result = new ImageLayer(await loadImage(`data/agreed.png`))
-        stack.push(result)
+        const name = args[0]
+        try {
+            const result = new ImageLayer(await loadImage(name))
+            stack.push(result)
+        } catch(e) {
+            console.error(e)
+        }
     }
 }
