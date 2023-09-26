@@ -14,6 +14,7 @@ export class ImageLayer implements Layer {
             ctx.drawImage(image, 0, 0, image.width, image.height)
         } catch(e) {
             console.error(e)
+            throw new Error(`Could not load image: ${this.imagePath}`)
         }
     }
     clone(): ImageLayer {
