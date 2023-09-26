@@ -9,6 +9,7 @@ import { EmptyLayer } from './layers/empty'
 import { CommandText } from './commands/text'
 import { CommandOverlap } from './commands/overlap'
 import { CommandTranslate } from './commands/translate'
+import { CommandScale } from './commands/scale'
 
 export interface Command {
     labels: string[]
@@ -17,8 +18,9 @@ export interface Command {
 
 export const commands: Command[] = [
     new CommandText(),
-    new CommandOverlap(),
     new CommandTranslate(),
+    new CommandScale(),
+    new CommandOverlap(),
 ]
 export const commandMap: { [label: string]: Command } = Object.fromEntries(
         commands.flatMap((command) => command.labels.map((label) => [label, command])))

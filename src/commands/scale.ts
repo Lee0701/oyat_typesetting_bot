@@ -1,18 +1,18 @@
 
 import { Command } from '../command_handler'
 import { Layer } from '../layers/layer'
-import { TranslateLayer } from '../layers/translate'
+import { ScaleLayer } from '../layers/scale'
 
-export class CommandTranslate implements Command {
+export class CommandScale implements Command {
     labels: string[]
     constructor() {
-        this.labels = ['translate']
+        this.labels = ['scale']
     }
     handle(stack: Layer[], label: string, args: any[]): void {
-        const dx = args[0] || 2
-        const dy = args[1] || 2
+        const sx = args[0] || 1
+        const sy = args[1] || 1
         const layer = stack.pop() as Layer
-        const result = new TranslateLayer(layer, dx, dy)
+        const result = new ScaleLayer(layer, sx, sy)
         stack.push(result)
     }
 }

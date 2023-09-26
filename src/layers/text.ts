@@ -1,8 +1,8 @@
 
 import { CanvasRenderingContext2D } from 'canvas'
-import { TranslatableLayer } from './layer'
+import { Layer } from './layer'
 
-export class TextLayer implements TranslatableLayer {
+export class TextLayer implements Layer {
     text: string
     x: number
     y: number
