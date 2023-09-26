@@ -22,6 +22,7 @@ export const commands: Command[] = [
     new Commands.OverlapCommand(),
     new Commands.HorizontalCommand(),
     new Commands.VerticalCommand(),
+    new Commands.CropCommand(),
 ]
 export const commandMap: { [label: string]: Command } = Object.fromEntries(
         commands.flatMap((command) => command.labels.map((label) => [label, command])))
