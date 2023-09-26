@@ -13,8 +13,8 @@ export class VerticalCommand implements Command {
     async handle(stack: Layer[], label: string, args: any[]): Promise<void> {
         const n = args[0] || 2
         const layers = stack.splice(stack.length - n, n)
-                .map((layer) => new ScaleLayer(layer, 1, 1 / n))
-                .map((layer, i) => new TranslateLayer(layer, 0, i / n))
+                .map((layer, i) => new TranslateLayer(layer, 0, i))
+                .map((layer) => new ScaleLayer(layer, 1/n, 1/n))
         const result = new OverlapLayer(layers)
         stack.push(result)
     }
