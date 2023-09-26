@@ -1,5 +1,5 @@
 
-import { Layer } from './layer'
+import { Layer } from '../layer'
 import { CanvasRenderingContext2D } from 'canvas'
 
 export class EmptyLayer implements Layer {

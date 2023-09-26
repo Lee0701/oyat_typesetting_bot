@@ -1,6 +1,6 @@
 
 import { Command } from '../command_handler'
-import { Layer } from '../layers/layer'
+import { Layer } from '../layer'
 import { TranslateLayer } from '../layers/translate'
 
 export class TranslateCommand implements Command {

@@ -4,7 +4,7 @@ import { createCanvas } from 'canvas'
 import sharp from 'sharp'
 import { parse } from './command_parser'
 
-import { Layer } from './layers/layer'
+import { Layer } from './layer'
 import { EmptyLayer } from './layers'
 
 import * as Commands from './commands'

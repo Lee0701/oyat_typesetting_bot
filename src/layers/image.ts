@@ -1,6 +1,6 @@
 
 import { loadImage } from 'canvas'
-import { Layer } from './layer'
+import { Layer } from '../layer'
 import { CanvasRenderingContext2D } from 'canvas'
 
 export class ImageLayer implements Layer {

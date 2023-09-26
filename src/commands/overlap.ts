@@ -1,6 +1,6 @@
 
 import { Command } from '../command_handler'
-import { Layer } from '../layers/layer'
+import { Layer } from '../layer'
 import { OverlapLayer } from '../layers/overlap'
 
 export class OverlapCommand implements Command {

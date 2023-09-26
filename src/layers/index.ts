@@ -1,4 +1,4 @@
-export { Layer } from './layer'
+export { Layer } from '../layer'
 
 export { EmptyLayer } from './empty'
 export { OverlapLayer } from './overlap'

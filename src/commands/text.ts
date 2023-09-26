@@ -1,6 +1,6 @@
 
 import { Command } from '../command_handler'
-import { Layer } from '../layers/layer'
+import { Layer } from '../layer'
 import { TextLayer } from '../layers/text'
 
 export class TextCommand implements Command {

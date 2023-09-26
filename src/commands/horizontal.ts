@@ -1,6 +1,6 @@
 
 import { Command } from '../command_handler'
-import { Layer } from '../layers/layer'
+import { Layer } from '../layer'
 import { OverlapLayer } from '../layers/overlap'
 import { ScaleLayer } from '../layers/scale'
 import { TranslateLayer } from '../layers/translate'

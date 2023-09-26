@@ -1,6 +1,6 @@
 
 import { CanvasRenderingContext2D } from 'canvas'
-import { Layer } from './layer'
+import { Layer } from '../layer'
 
 export class TextLayer implements Layer {
     text: string
