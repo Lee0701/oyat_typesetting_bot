@@ -1,18 +1,22 @@
 
-import { Image } from 'canvas'
+import { loadImage } from 'canvas'
 import { Layer } from './layer'
 import { CanvasRenderingContext2D } from 'canvas'
 
 export class ImageLayer implements Layer {
-    image: Image
-    constructor(image: Image) {
-        this.image = image
+    imagePath: string
+    constructor(imagePath: string) {
+        this.imagePath = imagePath
     }
-    render(ctx: CanvasRenderingContext2D): void {
-        console.log(this.image)
-        ctx.drawImage(this.image, 0, 0, this.image.width, this.image.height)
+    async render(ctx: CanvasRenderingContext2D): Promise<void> {
+        try {
+            const image = await loadImage(this.imagePath)
+            ctx.drawImage(image, 0, 0, image.width, image.height)
+        } catch(e) {
+            console.error(e)
+        }
     }
     clone(): ImageLayer {
-        return new ImageLayer(this.image)
+        return new ImageLayer(this.imagePath)
     }
 }

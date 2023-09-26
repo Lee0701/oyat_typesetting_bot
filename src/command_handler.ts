@@ -34,20 +34,25 @@ export interface ParsedCommand {
 
 export async function handleCommand(ctx: Context) {
     if(!ctx.message || !('text' in ctx.message)) return
-    const parsedCommands = parse(ctx.message.text)
-    const canvas = createCanvas(512, 512)
-    const g = canvas.getContext('2d')
+    try {
+        const parsedCommands = parse(ctx.message.text)
+        const canvas = createCanvas(512, 512)
+        const g = canvas.getContext('2d')
 
-    const stack: Layer[] = []
-    for(const cmd of parsedCommands) {
-        const {label, args} = cmd
-        const command = commandMap[label]
-        await command.handle(stack, label, args)
+        const stack: Layer[] = []
+        for(const cmd of parsedCommands) {
+            const {label, args} = cmd
+            const command = commandMap[label]
+            await command.handle(stack, label, args)
+        }
+        const result = stack.pop() || new EmptyLayer()
+        await result.render(g)
+
+        const png = canvas.toBuffer('image/png')
+        const webp = await sharp(png).ensureAlpha(0).webp({lossless: true}).toBuffer()
+        await ctx.replyWithSticker(Input.fromBuffer(webp))
+    } catch(e: any) {
+        console.error(e)
+        await ctx.reply(e.message)
     }
-    const result = stack.pop() || new EmptyLayer()
-    result.render(g)
-
-    const png = canvas.toBuffer('image/png')
-    const webp = await sharp(png).ensureAlpha(0).webp({lossless: true}).toBuffer()
-    await ctx.replyWithSticker(Input.fromBuffer(webp))
 }

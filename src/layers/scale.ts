@@ -11,10 +11,10 @@ export class ScaleLayer implements Layer {
         this.sx = sx
         this.sy = sy
     }
-    render(ctx: CanvasRenderingContext2D) {
+    async render(ctx: CanvasRenderingContext2D): Promise<void> {
         ctx.save()
         ctx.scale(this.sx, this.sy)
-        this.layer.render(ctx)
+        await this.layer.render(ctx)
         ctx.restore()
     }
     clone(): ScaleLayer {

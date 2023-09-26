@@ -11,12 +11,12 @@ export class TranslateLayer implements Layer {
         this.dx = dx
         this.dy = dy
     }
-    render(ctx: CanvasRenderingContext2D) {
+    async render(ctx: CanvasRenderingContext2D) {
         ctx.save()
         const dx = this.dx * ctx.canvas.width
         const dy = this.dy * ctx.canvas.height
         ctx.translate(dx, dy)
-        this.layer.render(ctx)
+        await this.layer.render(ctx)
         ctx.restore()
     }
     clone(): TranslateLayer {

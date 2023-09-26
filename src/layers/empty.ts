@@ -3,7 +3,7 @@ import { Layer } from './layer'
 import { CanvasRenderingContext2D } from 'canvas'
 
 export class EmptyLayer implements Layer {
-    render(ctx: CanvasRenderingContext2D): void { }
+    async render(ctx: CanvasRenderingContext2D): Promise<void> { }
     clone(): EmptyLayer {
         return new EmptyLayer()
     }

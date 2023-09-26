@@ -15,7 +15,7 @@ export class TextLayer implements Layer {
         this.font = 'sans-serif'
         this.stroke = 0
     }
-    render(ctx: CanvasRenderingContext2D): void {
+    async render(ctx: CanvasRenderingContext2D): Promise<void> {
         ctx.save()
         const size = ctx.canvas.height
         ctx.font = `${this.weight} ${size}px ${this.font}`

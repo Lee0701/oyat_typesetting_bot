@@ -7,8 +7,10 @@ export class OverlapLayer implements Layer {
     constructor(layers: Layer[] = []) {
         this.layers = layers
     }
-    render(ctx: CanvasRenderingContext2D) {
-        this.layers.forEach(layer => layer.render(ctx))
+    async render(ctx: CanvasRenderingContext2D): Promise<void> {
+        for(const layer of this.layers) {
+            await layer.render(ctx)
+        }
     }
     clone(): OverlapLayer {
         return new OverlapLayer(this.layers.map(layer => layer.clone()))
