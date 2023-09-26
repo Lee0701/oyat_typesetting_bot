@@ -1,19 +1,19 @@
 
 import { CanvasRenderingContext2D } from 'canvas'
-import { Layer } from './layer'
+import { TranslatableLayer } from './layer'
 
-export class TextLayer implements Layer {
+export class TextLayer implements TranslatableLayer {
     text: string
     x: number
     y: number
     size: number
     font: string
     direction: string
-    constructor(text: string, x: number, y: number, size: number) {
+    constructor(text: string) {
         this.text = text
-        this.x = x
-        this.y = y
-        this.size = size
+        this.x = 0
+        this.y = 0
+        this.size = 12
         this.font = 'sans-serif'
         this.direction = 'horizontal'
     }
@@ -23,7 +23,10 @@ export class TextLayer implements Layer {
     }
     clone(): TextLayer {
         const {text, x, y, size, font, direction} = this
-        const result = new TextLayer(text, x, y, size)
+        const result = new TextLayer(text)
+        result.x = x
+        result.y = y
+        result.size = size
         result.font = font
         result.direction = direction
         return result

@@ -9,10 +9,11 @@ export class CommandText implements Command {
         this.labels = ['text']
     }
     handle(stack: Layer[], label: string, args: any[]): void {
-        const [text, x, y, size, font, direction] = args
-        const result = new TextLayer(text, x, y, size)
+        const [text, size, font] = args
+        const result = new TextLayer(text)
+        result.size = size || result.size
         result.font = font || result.font
-        result.direction = direction || result.direction
+        result.font = font || result.font
         stack.push(result)
     }
 }
