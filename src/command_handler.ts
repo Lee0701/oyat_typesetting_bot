@@ -1,5 +1,6 @@
 
 import { Context, Input } from 'telegraf'
+import { Message } from 'typegram'
 import { createCanvas } from 'canvas'
 import sharp from 'sharp'
 import { parse } from './command_parser'
@@ -34,6 +35,18 @@ export interface ParsedCommand {
     args: any[]
 }
 
+function replaceArgs(ctx: Context, label: string, args: any[]): any[] {
+    const message = ctx.message as Message
+    return args.map((arg) => {
+        if(arg == '^' && ('reply_to_message' in message)) {
+            const replyToMsg = message.reply_to_message
+            if(replyToMsg && 'text' in replyToMsg) return replyToMsg.text
+        } else {
+            return arg
+        }
+    })
+}
+
 export async function handleCommand(ctx: Context) {
     if(!ctx.message || !('text' in ctx.message)) return
     try {
@@ -46,7 +59,7 @@ export async function handleCommand(ctx: Context) {
             const {label, args} = cmd
             const command = commandMap[label]
             if(!command) throw new Error(`Unknown command: ${label}`)
-            await command.handle(stack, label, args)
+            await command.handle(stack, label, replaceArgs(ctx, label, args))
         }
         const result = stack.pop() || new EmptyLayer()
         await result.render(g)

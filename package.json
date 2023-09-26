@@ -11,12 +11,14 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@types/node": "^20.7.0",
     "canvas": "^2.11.2",
     "dotenv": "^16.3.1",
     "peggy": "^3.0.2",
     "sharp": "^0.32.6",
     "telegraf": "^4.14.0",
     "ts-node": "^10.9.1",
-    "ts-pegjs": "^4.2.1"
+    "ts-pegjs": "^4.2.1",
+    "typegram": "^5.2.0"
   }
 }
