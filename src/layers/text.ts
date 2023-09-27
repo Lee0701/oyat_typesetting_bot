@@ -18,6 +18,7 @@ export class TextLayer implements Layer {
     async render(ctx: CanvasRenderingContext2D): Promise<void> {
         ctx.save()
         const size = ctx.canvas.height
+        ctx.textBaseline = 'top'
         ctx.font = `${this.weight} ${size}px ${this.font}`
         if(this.stroke == 0) {
             ctx.fillStyle = this.color
