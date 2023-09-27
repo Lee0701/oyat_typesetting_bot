@@ -10,8 +10,9 @@ export class ImageCommand implements Command {
         this.labels = ['image']
     }
     async handle(stack: Layer[], label: string, args: any[]): Promise<void> {
-        const filePath = path.join('data', args[0])
-        const result = new ImageLayer(filePath)
+        const filePath = args[0]
+        const isUrl = filePath.startsWith('http://') || filePath.startsWith('https://')
+        const result = new ImageLayer(isUrl ? filePath : path.join('data', filePath))
         stack.push(result)
     }
 }

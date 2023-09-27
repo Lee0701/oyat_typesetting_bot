@@ -35,16 +35,24 @@ export interface ParsedCommand {
     args: any[]
 }
 
-function replaceArgs(ctx: Context, label: string, args: any[]): any[] {
+async function replaceArgs(ctx: Context, label: string, args: any[]): Promise<any[]> {
     const message = ctx.message as Message
-    return args.map((arg) => {
+    return Promise.all(args.map(async (arg) => {
         if(arg == '^' && ('reply_to_message' in message)) {
             const replyToMsg = message.reply_to_message
-            if(replyToMsg && 'text' in replyToMsg) return replyToMsg.text
-        } else {
-            return arg
+            if(replyToMsg) {
+                if('text' in replyToMsg) {
+                    return replyToMsg.text
+                }
+                if('photo' in replyToMsg) {
+                    const fileId = replyToMsg.photo[replyToMsg.photo.length - 1].file_id
+                    const url = await ctx.telegram.getFileLink(fileId)
+                    return url.href
+                }
+            }
         }
-    })
+        return arg
+    }))
 }
 
 export async function handleCommand(ctx: Context) {
@@ -59,7 +67,7 @@ export async function handleCommand(ctx: Context) {
             const {label, args} = cmd
             const command = commandMap[label]
             if(!command) throw new Error(`Unknown command: ${label}`)
-            await command.handle(stack, label, replaceArgs(ctx, label, args))
+            await command.handle(stack, label, await replaceArgs(ctx, label, args))
         }
         const result = stack.pop() || new EmptyLayer()
         await result.render(g)
