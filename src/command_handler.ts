@@ -9,6 +9,7 @@ import { Layer } from './layer'
 import { EmptyLayer } from './layers'
 
 import * as Commands from './commands'
+import { getFileName, save, load, remove } from './saveload'
 
 export interface Command {
     labels: string[]
@@ -29,10 +30,19 @@ export const commands: Command[] = [
 export const commandMap: { [label: string]: Command } = Object.fromEntries(
         commands.flatMap((command) => command.labels.map((label) => [label, command])))
 export const labels: string[] = commands.flatMap((command) => command.labels)
+export const extraLabels: string[] = [
+    'define', 'undef'
+]
 
 export interface ParsedCommand {
     label: string
     args: any[]
+}
+
+async function loadUserCommand(uid: string, label: string): Promise<ParsedCommand[]> {
+    const file = getFileName(uid, label)
+    const content = await load(file)
+    return content as ParsedCommand[]
 }
 
 async function replaceArgs(ctx: Context, label: string, args: any[]): Promise<any[]> {
@@ -55,21 +65,48 @@ async function replaceArgs(ctx: Context, label: string, args: any[]): Promise<an
     }))
 }
 
-export async function handleCommand(ctx: Context) {
-    if(!ctx.message || !('text' in ctx.message)) return
-    try {
-        const parsedCommands = parse(ctx.message.text)
-        const canvas = createCanvas(512, 512)
-        const g = canvas.getContext('2d')
+export async function executeCommands(ctx: Context, stack: Layer[], parsedCommands: ParsedCommand[]): Promise<void> {
+    const uid = ctx.from ? ctx.from.id.toString() : null
+    if(uid == null) return
 
-        const stack: Layer[] = []
-        for(const cmd of parsedCommands) {
-            const {label, args} = cmd
+    if(parsedCommands.length) {
+        const firstCommand = parsedCommands.shift() as ParsedCommand
+        if(firstCommand.label == 'define') {
+            const file = getFileName(uid, firstCommand.args[0])
+            save(file, JSON.stringify(parsedCommands, null, 4))
+        } else if(firstCommand.label == 'undef') {
+            const file = getFileName(uid, firstCommand.args[0])
+            remove(file)
+            return
+        } else {
+            parsedCommands.unshift(firstCommand)
+        }
+    }
+
+    for(const cmd of parsedCommands) {
+        const {label, args} = cmd
+        const userCommand = await loadUserCommand(uid, label)
+        if(userCommand.length) {
+            await executeCommands(ctx, stack, userCommand)
+        } else {
             const command = commandMap[label]
             if(!command) throw new Error(`Unknown command: ${label}`)
             await command.handle(stack, label, await replaceArgs(ctx, label, args))
         }
-        const result = stack.pop() || new EmptyLayer()
+    }
+}
+
+export async function handleCommand(ctx: Context): Promise<void> {
+    if(!ctx.message || !('text' in ctx.message)) return
+    try {
+        const canvas = createCanvas(512, 512)
+        const g = canvas.getContext('2d')
+
+        const stack: Layer[] = []
+        const parsedCommands = parse(ctx.message.text)
+        await executeCommands(ctx, stack, parsedCommands)
+        if(stack.length == 0) return
+        const result = stack.pop() as Layer
         await result.render(g)
 
         const png = canvas.toBuffer('image/png')
