@@ -18,14 +18,18 @@ CommandArgument
   / String
 
 String
-  = QuotedString
+  = DoubleQuotedString
+  / SingleQuotedString
   / PlainString
 
-QuotedString
+DoubleQuotedString
   = _ '"' value:[^"]+ '"' { return value.join('') }
 
+SingleQuotedString
+  = _ "'" value:[^']+ "'" { return value.join('') }
+
 PlainString
-  = _ [^ /"]+ { return text().trim() }
+  = _ [^ /'"]+ { return text().trim() }
 
 Number "number"
   = _ [0-9.]+ { return parseFloat(text()); }
