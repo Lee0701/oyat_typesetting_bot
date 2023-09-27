@@ -16,8 +16,8 @@ export class TextLayer implements Layer {
         this.color = '#000000'
         this.font = 'sans-serif'
         this.stroke = 0
-        this.baseline ='top'
         this.align = 'left'
+        this.baseline ='top'
     }
     async render(ctx: CanvasRenderingContext2D): Promise<void> {
         ctx.save()

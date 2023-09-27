@@ -6,7 +6,6 @@ import sharp from 'sharp'
 import { parse } from './command_parser'
 
 import { Layer } from './layer'
-import { EmptyLayer } from './layers'
 
 import * as Commands from './commands'
 import { getFileName, save, load, remove } from './saveload'
@@ -45,9 +44,9 @@ async function loadUserCommand(uid: string, label: string): Promise<ParsedComman
     return content as ParsedCommand[]
 }
 
-async function replaceArgs(ctx: Context, label: string, args: any[]): Promise<any[]> {
+async function replaceArgs(ctx: Context, cmd: ParsedCommand, superArgs: any[]): Promise<any[]> {
     const message = ctx.message as Message
-    return Promise.all(args.map(async (arg) => {
+    return Promise.all(cmd.args.map(async (arg) => {
         if(arg == '^') {
             if('reply_to_message' in message) {
                 const replyToMsg = message.reply_to_message as Message
@@ -63,11 +62,15 @@ async function replaceArgs(ctx: Context, label: string, args: any[]): Promise<an
                 throw new Error(`Message is not a reply to a message`)
             }
         }
+        if(typeof arg == 'string' && arg.startsWith('$')) {
+            const num = parseInt(arg.slice(1)) - 1
+            return superArgs[num]
+        }
         return arg
     }))
 }
 
-export async function executeCommands(ctx: Context, stack: Layer[], parsedCommands: ParsedCommand[]): Promise<void> {
+export async function executeCommands(ctx: Context, stack: Layer[], parsedCommands: ParsedCommand[], superArgs: any[]): Promise<void> {
     const uid = ctx.from ? ctx.from.id.toString() : null
     if(uid == null) return
 
@@ -75,7 +78,7 @@ export async function executeCommands(ctx: Context, stack: Layer[], parsedComman
         const firstCommand = parsedCommands.shift() as ParsedCommand
         if(firstCommand.label == 'define') {
             const file = getFileName(uid, firstCommand.args[0])
-            save(file, JSON.stringify(parsedCommands, null, 4))
+            save(file, JSON.stringify(parsedCommands))
         } else if(firstCommand.label == 'undef') {
             const file = getFileName(uid, firstCommand.args[0])
             remove(file)
@@ -89,11 +92,11 @@ export async function executeCommands(ctx: Context, stack: Layer[], parsedComman
         const {label, args} = cmd
         const userCommand = await loadUserCommand(uid, label)
         if(userCommand.length) {
-            await executeCommands(ctx, stack, userCommand)
+            await executeCommands(ctx, stack, userCommand, args)
         } else {
             const command = commandMap[label]
             if(!command) throw new Error(`Unknown command: ${label}`)
-            await command.handle(stack, label, await replaceArgs(ctx, label, args))
+            await command.handle(stack, label, await replaceArgs(ctx, cmd, superArgs))
         }
     }
 }
@@ -106,7 +109,7 @@ export async function handleCommand(ctx: Context): Promise<void> {
 
         const stack: Layer[] = []
         const parsedCommands = parse(ctx.message.text)
-        await executeCommands(ctx, stack, parsedCommands)
+        await executeCommands(ctx, stack, parsedCommands, [])
         if(stack.length == 0) return
         const result = stack.pop() as Layer
         await result.render(g)
