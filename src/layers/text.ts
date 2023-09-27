@@ -1,5 +1,5 @@
 
-import { CanvasRenderingContext2D } from 'canvas'
+import { CanvasRenderingContext2D, CanvasTextBaseline, CanvasTextAlign } from 'canvas'
 import { Layer } from '../layer'
 
 export class TextLayer implements Layer {
@@ -8,17 +8,22 @@ export class TextLayer implements Layer {
     color: string
     font: string
     stroke: number
+    baseline: string
+    align: string
     constructor(text: string) {
         this.text = text
         this.weight = 'normal'
         this.color = '#000000'
         this.font = 'sans-serif'
         this.stroke = 0
+        this.baseline ='top'
+        this.align = 'left'
     }
     async render(ctx: CanvasRenderingContext2D): Promise<void> {
         ctx.save()
         const size = ctx.canvas.height
-        ctx.textBaseline = 'top'
+        ctx.textBaseline = this.baseline as CanvasTextBaseline
+        ctx.textAlign = this.align as CanvasTextAlign
         ctx.font = `${this.weight} ${size}px ${this.font}`
         if(this.stroke == 0) {
             ctx.fillStyle = this.color

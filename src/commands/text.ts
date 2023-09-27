@@ -9,12 +9,14 @@ export class TextCommand implements Command {
         this.labels = ['text']
     }
     async handle(stack: Layer[], label: string, args: any[]): Promise<void> {
-        const [text, weight, color, font, stroke] = args
+        const [text, weight, color, font, stroke, align, baseline] = args
         const result = new TextLayer(text)
         result.weight = weight || result.weight
         result.color = color || result.color
         result.font = font || result.font
         result.stroke = stroke || result.stroke
+        result.align = align || result.align
+        result.baseline = baseline || result.baseline
         stack.push(result)
     }
 }
