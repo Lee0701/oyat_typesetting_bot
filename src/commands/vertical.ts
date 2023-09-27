@@ -11,10 +11,10 @@ export class VerticalCommand implements Command {
         this.labels = ['vertical']
     }
     async handle(stack: Layer[], label: string, args: any[]): Promise<void> {
-        const n = args[0] || 2
-        const layers = stack.splice(stack.length - n, n)
-                .map((layer, i) => new TranslateLayer(layer, 0, i))
-                .map((layer) => new ScaleLayer(layer, 1/n, 1/n))
+        const n = args.shift() || 2
+        let layers = stack.splice(stack.length - n, n)
+        layers = layers.map((layer, i) => new TranslateLayer(layer, 0, i))
+        if(args.includes('scale')) layers = layers.map((layer) => new ScaleLayer(layer, 1/n, 1/n))
         const result = new OverlapLayer(layers)
         stack.push(result)
     }
