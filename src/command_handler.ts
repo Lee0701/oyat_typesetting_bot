@@ -48,9 +48,9 @@ async function loadUserCommand(uid: string, label: string): Promise<ParsedComman
 async function replaceArgs(ctx: Context, label: string, args: any[]): Promise<any[]> {
     const message = ctx.message as Message
     return Promise.all(args.map(async (arg) => {
-        if(arg == '^' && ('reply_to_message' in message)) {
-            const replyToMsg = message.reply_to_message
-            if(replyToMsg) {
+        if(arg == '^') {
+            if('reply_to_message' in message) {
+                const replyToMsg = message.reply_to_message as Message
                 if('text' in replyToMsg) {
                     return replyToMsg.text
                 }
@@ -59,6 +59,8 @@ async function replaceArgs(ctx: Context, label: string, args: any[]): Promise<an
                     const url = await ctx.telegram.getFileLink(fileId)
                     return url.href
                 }
+            } else {
+                throw new Error(`Message is not a reply to a message`)
             }
         }
         return arg
