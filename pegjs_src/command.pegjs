@@ -11,7 +11,7 @@ Command
   }
 
 CommandLabel
-  = head:[a-zA-Z_] tail:[0-9a-zA-Z_]+ { return head + tail.join('') }
+  = head:[a-zA-Z_] tail:[0-9a-zA-Z_]* { return head + tail.join('') }
 
 CommandArgument
   = Number
@@ -29,7 +29,7 @@ SingleQuotedString
   = _ "'" value:[^']+ "'" { return value.join('') }
 
 PlainString
-  = _ [^ /'"]+ { return text().trim() }
+  = _ [^ \t\n\r/'"]+ { return text().trim() }
 
 Number "number"
   = _ [0-9.]+ { return parseFloat(text()); }

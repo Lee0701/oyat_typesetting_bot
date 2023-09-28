@@ -1,5 +1,5 @@
 
-import { Command } from '../command_handler'
+import { Command, CommandInvocation } from '../command'
 import { Layer } from '../layer'
 import { TextLayer } from '../layers/text'
 
@@ -8,8 +8,8 @@ export class TextCommand implements Command {
     constructor() {
         this.labels = ['text']
     }
-    async handle(stack: Layer[], label: string, args: any[]): Promise<void> {
-        const [text, weight, color, font, stroke, align, baseline] = args
+    async invoke(call: CommandInvocation, stack: Layer[]): Promise<void> {
+        const [text, weight, color, font, stroke, align, baseline] = call.args
         const result = new TextLayer(text)
         result.weight = weight || result.weight
         result.color = color || result.color

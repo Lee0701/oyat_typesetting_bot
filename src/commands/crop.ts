@@ -1,5 +1,5 @@
 
-import { Command } from '../command_handler'
+import { Command, CommandInvocation } from '../command'
 import { CropLayer, Layer } from '../layers'
 
 export class CropCommand implements Command {
@@ -7,8 +7,8 @@ export class CropCommand implements Command {
     constructor() {
         this.labels = ['crop']
     }
-    async handle(stack: Layer[], label: string, args: any[]): Promise<void> {
-        const [w, h] = args
+    async invoke(call: CommandInvocation, stack: Layer[]): Promise<void> {
+        const [w, h] = call.args
         const layer = stack.pop() as Layer
         const ratio = w /h
         const newW = w > h ? 512 : ratio * 512

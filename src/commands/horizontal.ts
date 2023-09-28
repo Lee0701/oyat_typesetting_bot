@@ -1,5 +1,5 @@
 
-import { Command } from '../command_handler'
+import { Command, CommandInvocation } from '../command'
 import { Layer } from '../layer'
 import { OverlapLayer } from '../layers/overlap'
 import { ScaleLayer } from '../layers/scale'
@@ -10,11 +10,11 @@ export class HorizontalCommand implements Command {
     constructor() {
         this.labels = ['horizontal']
     }
-    async handle(stack: Layer[], label: string, args: any[]): Promise<void> {
-        const n = args.shift() || 2
+    async invoke(call: CommandInvocation, stack: Layer[]): Promise<void> {
+        const n = call.args.shift() || 2
         let layers = stack.splice(stack.length - n, n)
         layers = layers.map((layer, i) => new TranslateLayer(layer, i, 0))
-        if(args.includes('scale')) layers = layers.map((layer) => new ScaleLayer(layer, 1/n, 1/n))
+        if(call.args.includes('scale')) layers = layers.map((layer) => new ScaleLayer(layer, 1/n, 1/n))
         const result = new OverlapLayer(layers)
         stack.push(result)
     }

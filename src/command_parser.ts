@@ -309,7 +309,7 @@ function peg$parse(input, options) {
   var peg$r1 = /^[0-9a-zA-Z_]/;
   var peg$r2 = /^[^"]/;
   var peg$r3 = /^[^']/;
-  var peg$r4 = /^[^ \/'"]/;
+  var peg$r4 = /^[^ \t\n\r\/'"]/;
   var peg$r5 = /^[0-9.]/;
   var peg$r6 = /^[ \t\n\r]/;
 
@@ -320,7 +320,7 @@ function peg$parse(input, options) {
   var peg$e4 = peg$classExpectation(["\""], true, false);
   var peg$e5 = peg$literalExpectation("'", false);
   var peg$e6 = peg$classExpectation(["'"], true, false);
-  var peg$e7 = peg$classExpectation([" ", "/", "'", "\""], true, false);
+  var peg$e7 = peg$classExpectation([" ", "\t", "\n", "\r", "/", "'", "\""], true, false);
   var peg$e8 = peg$otherExpectation("number");
   var peg$e9 = peg$classExpectation([["0", "9"], "."], false, false);
   var peg$e10 = peg$otherExpectation("whitespace");
@@ -742,43 +742,27 @@ peg$parseCommandLabel() {
         if (peg$silentFails === 0) { peg$fail(peg$e2); }
       }
 // @ts-ignore
-      if (s3 !== peg$FAILED) {
+      while (s3 !== peg$FAILED) {
 // @ts-ignore
-        while (s3 !== peg$FAILED) {
+        s2.push(s3);
 // @ts-ignore
-          s2.push(s3);
+        if (peg$r1.test(input.charAt(peg$currPos))) {
 // @ts-ignore
-          if (peg$r1.test(input.charAt(peg$currPos))) {
+          s3 = input.charAt(peg$currPos);
 // @ts-ignore
-            s3 = input.charAt(peg$currPos);
+          peg$currPos++;
 // @ts-ignore
-            peg$currPos++;
+        } else {
 // @ts-ignore
-          } else {
+          s3 = peg$FAILED;
 // @ts-ignore
-            s3 = peg$FAILED;
-// @ts-ignore
-            if (peg$silentFails === 0) { peg$fail(peg$e2); }
-          }
+          if (peg$silentFails === 0) { peg$fail(peg$e2); }
         }
-// @ts-ignore
-      } else {
-// @ts-ignore
-        s2 = peg$FAILED;
       }
 // @ts-ignore
-      if (s2 !== peg$FAILED) {
+      peg$savedPos = s0;
 // @ts-ignore
-        peg$savedPos = s0;
-// @ts-ignore
-        s0 = peg$f1(s1, s2);
-// @ts-ignore
-      } else {
-// @ts-ignore
-        peg$currPos = s0;
-// @ts-ignore
-        s0 = peg$FAILED;
-      }
+      s0 = peg$f1(s1, s2);
 // @ts-ignore
     } else {
 // @ts-ignore

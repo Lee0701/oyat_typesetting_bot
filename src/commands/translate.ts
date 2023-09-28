@@ -1,5 +1,5 @@
 
-import { Command } from '../command_handler'
+import { Command, CommandInvocation } from '../command'
 import { Layer } from '../layer'
 import { TranslateLayer } from '../layers/translate'
 
@@ -8,9 +8,9 @@ export class TranslateCommand implements Command {
     constructor() {
         this.labels = ['translate']
     }
-    async handle(stack: Layer[], label: string, args: any[]): Promise<void> {
-        const dx = args[0] || 0
-        const dy = args[1] || 0
+    async invoke(call: CommandInvocation, stack: Layer[]): Promise<void> {
+        const dx = call.args[0] || 0
+        const dy = call.args[1] || 0
         const layer = stack.pop() as Layer
         const result = new TranslateLayer(layer, dx, dy)
         stack.push(result)
