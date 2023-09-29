@@ -1,5 +1,6 @@
 
 import dotenv from 'dotenv'
+import * as fs from 'fs/promises'
 import { Context, Input, Telegraf } from 'telegraf'
 import { parse } from './command_parser'
 import * as Command from './command'
@@ -73,7 +74,13 @@ async function main() {
         Command.getSystemCommands(),
         Command.getInternalCommands(),
     ]
-    commands.forEach((command) => bot.command(command, handleCommand))
+    commands.forEach((command) => bot.command(command, handleCommand));
+    (async () => {
+        for await (const file of fs.watch(Command.COMMANDS_DIR)) {
+            await Command.loadUserCommandDefinitions()
+            Command.getUserCommandDefinitions().forEach((command) => bot.command(command, handleCommand))
+        }
+    })()
     bot.launch()
 }
 

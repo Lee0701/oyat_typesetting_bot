@@ -69,6 +69,9 @@ export function preprocessCommandInvocations(invocations: CommandInvocation[], r
 }
 
 export async function loadUserCommandDefinitions() {
+    for(const file in userCommandDefinitions) {
+        delete userCommandDefinitions[file]
+    }
     const files = await fs.readdir(COMMANDS_DIR)
     for(const f of files) {
         const file = path.join(COMMANDS_DIR, f)
