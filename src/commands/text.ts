@@ -9,10 +9,8 @@ export class TextCommand implements Command {
         this.labels = ['text']
     }
     async invoke(call: CommandInvocation, stack: Layer[]): Promise<void> {
-        const [weight, color, font, stroke, align, baseline] = call.args
-        const layer = stack.pop() as Layer
-        const str = layer instanceof StringLayer ? layer.str : layer instanceof NumberLayer ? layer.num.toString() : undefined
-        const result = new TextLayer(str as string)
+        const [text, weight, color, font, stroke, align, baseline] = call.args
+        const result = new TextLayer(text)
         result.weight = weight || result.weight
         result.color = color || result.color
         result.font = font || result.font

@@ -13,9 +13,19 @@ async function handleCommand(ctx: Context) {
     if(!msg) return
     const text = 'text' in msg ? msg.text : 'caption' in msg ? msg.caption : null
     if(!text) return
-    const replyToContent =
-            'reply_to_message' in msg && msg.reply_to_message && 'text' in msg.reply_to_message
-            ? msg.reply_to_message.text : ''
+    let replyToContent = '^'
+    if('reply_to_message' in msg && msg.reply_to_message) {
+        if('text' in msg.reply_to_message && msg.reply_to_message.text) {
+            replyToContent = msg.reply_to_message.text
+        } else if('photo' in msg.reply_to_message && msg.reply_to_message.photo) {
+            const photoIndex = msg.reply_to_message.photo.length - 1
+            const fileId = msg.reply_to_message.photo[photoIndex].file_id || replyToContent
+            replyToContent = (await ctx.telegram.getFileLink(fileId)).href
+        } else if('document' in msg.reply_to_message && msg.reply_to_message.document) {
+            const fileId = msg.reply_to_message.document.file_id || replyToContent
+            replyToContent = (await ctx.telegram.getFileLink(fileId)).href
+        }
+    }
     try {
         const canvas = createCanvas(512, 512)
         const g = canvas.getContext('2d')
