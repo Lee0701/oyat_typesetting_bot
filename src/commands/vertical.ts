@@ -1,9 +1,7 @@
 
 import { Command, CommandInvocation } from '../command'
 import { Layer } from '../layer'
-import { OverlapLayer } from '../layers/overlap'
-import { ScaleLayer } from '../layers/scale'
-import { TranslateLayer } from '../layers/translate'
+import { OverlapLayer, ScaleLayer, TranslateLayer } from '../layers'
 
 export class VerticalCommand implements Command {
     labels: string[]

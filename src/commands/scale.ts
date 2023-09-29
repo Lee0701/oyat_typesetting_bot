@@ -1,7 +1,7 @@
 
 import { Command, CommandInvocation } from '../command'
 import { Layer } from '../layer'
-import { ScaleLayer } from '../layers/scale'
+import { ScaleLayer } from '../layers'
 
 export class ScaleCommand implements Command {
     labels: string[]

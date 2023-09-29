@@ -1,3 +1,4 @@
+export { PushCommand } from './push'
 export { TextCommand } from './text'
 export { ImageCommand } from './image'
 export { TranslateCommand } from './translate'

@@ -1,7 +1,7 @@
 
 import { Command, CommandInvocation } from '../command'
 import { Layer } from '../layer'
-import { TranslateLayer } from '../layers/translate'
+import { TranslateLayer } from '../layers'
 
 export class TranslateCommand implements Command {
     labels: string[]

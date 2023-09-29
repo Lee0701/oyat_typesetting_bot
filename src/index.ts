@@ -2,7 +2,7 @@
 import dotenv from 'dotenv'
 import { Context, Input, Telegraf } from 'telegraf'
 import { parse } from './command_parser'
-import { CommandInvocation, handleCommandInvocations, getInternalCommands, loadUserCommandDefinitions, preprocessCommandInvocations, resolveCommandInvocations, getUserCommandDefinitions } from './command'
+import { CommandInvocation, handleCommandInvocations, getInternalCommands, loadUserCommandDefinitions, preprocessCommandInvocations, resolveCommandInvocations, getUserCommandDefinitions, handleSystemCommand, getSystemCommands } from './command'
 import { Layer } from './layer'
 import { createCanvas } from 'canvas'
 import sharp from 'sharp'
@@ -37,6 +37,8 @@ async function handleCommand(ctx: Context) {
 
 async function invokeCommands(text: string, replyToContent: string, stack: Layer[]) {
     const invocations: CommandInvocation[] = parse(text)
+    const systemCommand = await handleSystemCommand(invocations)
+    if(systemCommand) return stack.splice(0, stack.length)
     const preprocessed = preprocessCommandInvocations(invocations, replyToContent)
     const resolved = await resolveCommandInvocations(preprocessed)
     const args = preprocessed[0].args
@@ -46,6 +48,7 @@ async function invokeCommands(text: string, replyToContent: string, stack: Layer
 async function main() {
     const token = process.env.TELEGRAM_BOT_TOKEN as string
     const bot = new Telegraf(token)
+    getSystemCommands().forEach((command) => bot.command(command, handleCommand))
     getInternalCommands().forEach((command) => bot.command(command, handleCommand))
     await loadUserCommandDefinitions()
     getUserCommandDefinitions().forEach((command) => bot.command(command, handleCommand))

@@ -1,7 +1,7 @@
 
 import { Command, CommandInvocation } from '../command'
 import { Layer } from '../layer'
-import { OverlapLayer } from '../layers/overlap'
+import { OverlapLayer } from '../layers'
 
 export class OverlapCommand implements Command {
     labels: string[]
