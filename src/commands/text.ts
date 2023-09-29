@@ -1,7 +1,7 @@
 
 import { Command, CommandInvocation } from '../command'
 import { Layer } from '../layer'
-import { TextLayer, StringLayer } from '../layers'
+import { TextLayer, StringLayer, NumberLayer } from '../layers'
 
 export class TextCommand implements Command {
     labels: string[]
@@ -10,8 +10,9 @@ export class TextCommand implements Command {
     }
     async invoke(call: CommandInvocation, stack: Layer[]): Promise<void> {
         const [weight, color, font, stroke, align, baseline] = call.args
-        const str = stack.pop() as StringLayer
-        const result = new TextLayer(str.str)
+        const layer = stack.pop() as Layer
+        const str = layer instanceof StringLayer ? layer.str : layer instanceof NumberLayer ? layer.num.toString() : undefined
+        const result = new TextLayer(str as string)
         result.weight = weight || result.weight
         result.color = color || result.color
         result.font = font || result.font

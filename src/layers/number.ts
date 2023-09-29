@@ -4,8 +4,8 @@ import { Layer } from '../layer'
 
 export class NumberLayer implements Layer {
     num: number
-    constructor(str: number) {
-        this.num = str
+    constructor(num: number) {
+        this.num = num
     }
     async render(ctx: CanvasRenderingContext2D): Promise<void> { }
     clone(): NumberLayer {
