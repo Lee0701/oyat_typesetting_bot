@@ -59,8 +59,11 @@ export function preprocessCommandInvocations(invocations: CommandInvocation[], r
 
     return invocations.map((invocation) => {
         const args = invocation.args.map((arg) => {
-            if(arg == '^') return replyToContent
-            return arg
+            if(arg == '^') {
+                return replyToContent
+            } else {
+                return arg
+            }
         })
         return {...invocation, args}
     })
