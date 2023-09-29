@@ -11,7 +11,10 @@ export class TextLayer implements Layer {
     baseline: string
     align: string
     constructor(text: string) {
-        this.text = text
+        this.text = Object.entries(ESCAPE_SEQUENCES).reduce((acc, [k, v]) => {
+            const regex = new RegExp(k, 'g')
+            return acc.replace(regex, v)
+        }, text)
         this.weight = 'normal'
         this.color = '#000000'
         this.font = 'sans-serif'
@@ -38,10 +41,17 @@ export class TextLayer implements Layer {
         ctx.restore()
     }
     clone(): TextLayer {
-        const result = new TextLayer(this.text)
+        const result = new TextLayer('')
+        result.text = this.text
         result.color = this.color
         result.font = this.font
         result.stroke = this.stroke
         return result
     }
+}
+
+export const ESCAPE_SEQUENCES = {
+    '\\\\\\\\': '\\',
+    '\\\\n': '\n',
+    '\\\\t': '\t',
 }
