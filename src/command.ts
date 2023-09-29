@@ -12,6 +12,7 @@ export const USER_CMD_EXT = '.json'
 export const COMMAND_DEFINE = 'define'
 export const COMMAND_UNDEF = 'undef'
 export const COMMAND_SHOWDEF = 'showdef'
+export const COMMAND_LISTDEF = 'listdef'
 
 export async function handleSystemCommand(invocations: CommandInvocation[]): Promise<string|null> {
     const command = invocations.shift()
@@ -26,6 +27,8 @@ export async function handleSystemCommand(invocations: CommandInvocation[]): Pro
         return command.args.shift()
     } else if(command.label == COMMAND_SHOWDEF) {
         return await makeDefinedCommandList(file)
+    } else if(command.label == COMMAND_LISTDEF) {
+        return Object.keys(userCommandDefinitions).join('\n')
     } else {
         invocations.unshift(command)
         return null
@@ -149,4 +152,5 @@ const systemCommands: string[] = [
     COMMAND_DEFINE,
     COMMAND_UNDEF,
     COMMAND_SHOWDEF,
+    COMMAND_LISTDEF,
 ]
