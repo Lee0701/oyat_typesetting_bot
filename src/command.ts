@@ -29,29 +29,25 @@ export async function handleSystemCommand(invocations: CommandInvocation[]): Pro
     }
 }
 
-export async function handleCommandInvocations(invocations: CommandInvocation[], args: any[], stack: Layer[]) {
-    for (const invocation of invocations) {
-        const internalCommand = internalCommandsMap[invocation.label] as Command
-        if (internalCommand) {
-            await internalCommand.invoke(invocation, stack)
-        }
-    }
-}
-
-export async function resolveCommandInvocations(invocations: CommandInvocation[])
-        : Promise<CommandInvocation[]> {
-
-    const result: CommandInvocation[] = []
+export async function handleCommandInvocations(invocations: CommandInvocation[], callArgs: any[], stack: Layer[]) {
     for(const invocation of invocations) {
-        if(internalCommandsMap[invocation.label]) {
-            result.push(invocation)
-        } else if(userCommandDefinitions[invocation.label]) {
-            const invs = userCommandDefinitions[invocation.label]
-            const r = await resolveCommandInvocations(invs)
-            result.push(...r)
+        const label = invocation.label
+        const args = invocation.args.map((arg) => {
+            if(typeof arg === 'string' && arg.startsWith('$')) {
+                const index = parseInt(arg.slice(1)) - 1
+                return callArgs[index] || arg
+            } else {
+                return arg
+            }
+        })
+        if(internalCommandsMap[label]) {
+            const internalCommand = internalCommandsMap[label]
+            if(internalCommand) await internalCommand.invoke({label, args}, stack)
+        } else if(userCommandDefinitions[label]) {
+            const invs = userCommandDefinitions[label]
+            await handleCommandInvocations(invs, args, stack)
         }
     }
-    return result
 }
 
 export function preprocessCommandInvocations(invocations: CommandInvocation[], replyToContent: string)
