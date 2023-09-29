@@ -17,11 +17,11 @@ export async function handleSystemCommand(invocations: CommandInvocation[]): Pro
     if(!command) return false
     if(command.label == COMMAND_DEFINE) {
         const label = command.args.shift()
-        await saveCommandInvocation(label + USER_CMD_EXT, invocations)
+        await saveCommandInvocation(path.join(COMMANDS_DIR, label + USER_CMD_EXT), invocations)
         return true
     } else if(command.label == COMMAND_UNDEF) {
         const label = command.args.shift()
-        await removeCommandInvocation(label + USER_CMD_EXT)
+        await removeCommandInvocation(path.join(COMMANDS_DIR, label + USER_CMD_EXT))
         return true
     } else {
         invocations.unshift(command)

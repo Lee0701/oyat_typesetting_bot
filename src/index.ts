@@ -47,9 +47,9 @@ async function handleCommand(ctx: Context) {
 
 async function invokeCommands(text: string, replyToContent: string, stack: Layer[]) {
     const invocations: Command.CommandInvocation[] = parse(text)
-    const systemCommand = await Command.handleSystemCommand(invocations)
-    if(systemCommand) return stack.splice(0, stack.length)
     const preprocessed = Command.preprocessCommandInvocations(invocations, replyToContent)
+    const systemCommand = await Command.handleSystemCommand(preprocessed)
+    if(systemCommand) return stack.splice(0, stack.length)
     const resolved = await Command.resolveCommandInvocations(preprocessed)
     const args = preprocessed[0].args
     await Command.handleCommandInvocations(resolved, args, stack)
