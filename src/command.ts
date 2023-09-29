@@ -11,21 +11,24 @@ export const USER_CMD_EXT = '.json'
 
 export const COMMAND_DEFINE = 'define'
 export const COMMAND_UNDEF = 'undef'
+export const COMMAND_SHOWDEF = 'showdef'
 
-export async function handleSystemCommand(invocations: CommandInvocation[]): Promise<boolean> {
+export async function handleSystemCommand(invocations: CommandInvocation[]): Promise<string|null> {
     const command = invocations.shift()
-    if(!command) return false
+    if(!command) return null
+    const label = command.args[0]
+    const file = path.join(COMMANDS_DIR, label + USER_CMD_EXT)
     if(command.label == COMMAND_DEFINE) {
-        const label = command.args.shift()
-        await saveCommandInvocation(path.join(COMMANDS_DIR, label + USER_CMD_EXT), invocations)
-        return true
+        await saveCommandInvocation(file, invocations)
+        return command.args.shift()
     } else if(command.label == COMMAND_UNDEF) {
-        const label = command.args.shift()
-        await removeCommandInvocation(path.join(COMMANDS_DIR, label + USER_CMD_EXT))
-        return true
+        await removeCommandInvocation(file)
+        return command.args.shift()
+    } else if(command.label == COMMAND_SHOWDEF) {
+        return await makeDefinedCommandList(file)
     } else {
         invocations.unshift(command)
-        return false
+        return null
     }
 }
 
@@ -91,6 +94,13 @@ export async function removeCommandInvocation(file: string): Promise<void> {
     await fs.unlink(file)
 }
 
+export async function makeDefinedCommandList(file: string): Promise<string> {
+    const content = await fs.readFile(file, 'utf-8')
+    const invocations = JSON.parse(content) as CommandInvocation[]
+    const result = invocations.map(({label, args}) => `/${label} ${args.join(' ')}`).join('\n')
+    return result
+}
+
 export function getInternalCommands(): string[] {
     return Object.keys(internalCommandsMap)
 }
@@ -135,4 +145,5 @@ const internalCommandsMap: {[label: string]: Command} = Object.fromEntries(inter
 const systemCommands: string[] = [
     COMMAND_DEFINE,
     COMMAND_UNDEF,
+    COMMAND_SHOWDEF,
 ]

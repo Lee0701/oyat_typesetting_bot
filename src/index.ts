@@ -13,25 +13,13 @@ async function handleCommand(ctx: Context) {
     if(!msg) return
     const text = 'text' in msg ? msg.text : 'caption' in msg ? msg.caption : null
     if(!text) return
-    let replyToContent = '^'
-    if('reply_to_message' in msg && msg.reply_to_message) {
-        if('text' in msg.reply_to_message && msg.reply_to_message.text) {
-            replyToContent = msg.reply_to_message.text
-        } else if('photo' in msg.reply_to_message && msg.reply_to_message.photo) {
-            const photoIndex = msg.reply_to_message.photo.length - 1
-            const fileId = msg.reply_to_message.photo[photoIndex].file_id || replyToContent
-            replyToContent = (await ctx.telegram.getFileLink(fileId)).href
-        } else if('document' in msg.reply_to_message && msg.reply_to_message.document) {
-            const fileId = msg.reply_to_message.document.file_id || replyToContent
-            replyToContent = (await ctx.telegram.getFileLink(fileId)).href
-        }
-    }
+    const replyToContent = await getReplyToContent(ctx) || '^'
     try {
         const canvas = createCanvas(512, 512)
         const g = canvas.getContext('2d')
 
         const stack: Layer[] = []
-        await invokeCommands(text, replyToContent, stack)
+        await invokeCommands(ctx, text, replyToContent, stack)
         if(stack.length == 0) return
         const result = stack.pop() as Layer
         await result.render(g)
@@ -45,11 +33,33 @@ async function handleCommand(ctx: Context) {
     }
 }
 
-async function invokeCommands(text: string, replyToContent: string, stack: Layer[]) {
+async function getReplyToContent(ctx: Context): Promise<string|null> {
+    const msg = ctx.message
+    if(!msg) return null
+    if('reply_to_message' in msg && msg.reply_to_message) {
+        if('text' in msg.reply_to_message && msg.reply_to_message.text) {
+            return msg.reply_to_message.text
+        } else if('photo' in msg.reply_to_message && msg.reply_to_message.photo) {
+            const photoIndex = msg.reply_to_message.photo.length - 1
+            const fileId = msg.reply_to_message.photo[photoIndex].file_id
+            return (await ctx.telegram.getFileLink(fileId)).href
+        } else if('document' in msg.reply_to_message && msg.reply_to_message.document) {
+            const fileId = msg.reply_to_message.document.file_id
+            return (await ctx.telegram.getFileLink(fileId)).href
+        }
+    }
+    return null
+}
+
+async function invokeCommands(ctx: Context, text: string, replyToContent: string, stack: Layer[]) {
     const invocations: Command.CommandInvocation[] = parse(text)
     const preprocessed = Command.preprocessCommandInvocations(invocations, replyToContent)
     const systemCommand = await Command.handleSystemCommand(preprocessed)
-    if(systemCommand) return stack.splice(0, stack.length)
+    if(systemCommand !== null) {
+        stack.splice(0, stack.length)
+        ctx.reply(systemCommand)
+        return
+    }
     const args = preprocessed[0].args
     await Command.handleCommandInvocations(preprocessed, args, stack)
 }
