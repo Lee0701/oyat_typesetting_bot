@@ -17,6 +17,9 @@ dependencies:
   peggy:
     specifier: ^3.0.2
     version: 3.0.2
+  phin:
+    specifier: ^3.7.0
+    version: 3.7.0
   sharp:
     specifier: ^0.32.6
     version: 0.32.6
@@ -255,6 +258,10 @@ packages:
     transitivePeerDependencies:
       - encoding
       - supports-color
+    dev: false
+
+  /centra@2.6.0:
+    resolution: {integrity: sha512-dgh+YleemrT8u85QL11Z6tYhegAs3MMxsaWAq/oXeAmYJ7VxL3SI9TZtnfaEvNDMAPolj25FXIb3S+HCI4wQaQ==}
     dev: false
 
   /chownr@1.1.4:
@@ -710,6 +717,13 @@ packages:
     dependencies:
       commander: 10.0.1
       source-map-generator: 0.8.0
+    dev: false
+
+  /phin@3.7.0:
+    resolution: {integrity: sha512-DqnVNrpYhKGBZppNKprD+UJylMeEKOZxHgPB+ZP6mGzf3uA2uox4Ep9tUm+rUc8WLIdHT3HcAE4X8fhwQA9JKg==}
+    engines: {node: '>= 8'}
+    dependencies:
+      centra: 2.6.0
     dev: false
 
   /picomatch@2.3.1:

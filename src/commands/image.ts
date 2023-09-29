@@ -1,6 +1,6 @@
 
 import * as path from 'path'
-import { Command, CommandInvocation } from '../command'
+import { Command, CommandInvocation, IMAGES_DIR } from '../command'
 import { ImageLayer, Layer } from '../layers'
 
 export class ImageCommand implements Command {
@@ -10,8 +10,7 @@ export class ImageCommand implements Command {
     }
     async invoke(call: CommandInvocation, stack: Layer[]): Promise<void> {
         const filePath = call.args[0] as string
-        const isUrl = filePath.startsWith('http://') || filePath.startsWith('https://')
-        const result = new ImageLayer(isUrl ? filePath : path.join('data', filePath))
+        const result = new ImageLayer(filePath)
         stack.push(result)
     }
 }

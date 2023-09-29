@@ -6,6 +6,7 @@ import * as Commands from './commands'
 import { Layer } from './layer'
 
 export const DATA_DIR = 'data'
+export const IMAGES_DIR = path.join(DATA_DIR, 'images')
 export const COMMANDS_DIR = path.join(DATA_DIR, 'commands')
 export const USER_CMD_EXT = '.json'
 
@@ -14,14 +15,28 @@ export const COMMAND_UNDEF = 'undef'
 export const COMMAND_SHOWDEF = 'showdef'
 export const COMMAND_LISTDEF = 'listdef'
 
-export async function handleSystemCommand(invocations: CommandInvocation[]): Promise<string|null> {
+export const PREFIX_FROM_REPLY = '^'
+export const PREFIX_ARGUMENT = '$'
+
+export async function handleSystemCommand(invocations: CommandInvocation[], replyToContent: string)
+        : Promise<string|null> {
+
     const command = invocations.shift()
     if(!command) return null
     const label = command.args[0]
     const file = path.join(COMMANDS_DIR, label + USER_CMD_EXT)
     if(command.label == COMMAND_DEFINE) {
-        await saveCommandInvocation(file, invocations)
-        return command.args.shift()
+        if(replyToContent) {
+            const label = 'image'
+            const fileHash = path.basename(replyToContent)
+            const prefix = fileHash.substring(0, 2)
+            const args = [path.join(IMAGES_DIR, prefix, fileHash)]
+            await saveCommandInvocation(file, [{label, args}])
+            return command.args.shift() as string
+        } else {
+            await saveCommandInvocation(file, invocations)
+            return command.args.shift() as string
+        }
     } else if(command.label == COMMAND_UNDEF) {
         await removeCommandInvocation(file)
         return command.args.shift()
@@ -39,7 +54,7 @@ export async function handleCommandInvocations(invocations: CommandInvocation[],
     for(const invocation of invocations) {
         const label = invocation.label
         const args = invocation.args.map((arg) => {
-            if(typeof arg === 'string' && arg.startsWith('$')) {
+            if(typeof arg === 'string' && arg.startsWith(PREFIX_ARGUMENT)) {
                 const index = parseInt(arg.slice(1)) - 1
                 return callArgs[index] || arg
             } else {
@@ -61,7 +76,7 @@ export function preprocessCommandInvocations(invocations: CommandInvocation[], r
 
     return invocations.map((invocation) => {
         const args = invocation.args.map((arg) => {
-            if(arg == '^') {
+            if(arg == PREFIX_FROM_REPLY) {
                 return replyToContent
             } else {
                 return arg
@@ -92,7 +107,7 @@ export async function loadCommandInvocation(file: string): Promise<CommandInvoca
 }
 
 export async function saveCommandInvocation(file: string, content: CommandInvocation[]): Promise<void> {
-    await fs.mkdir(path.dirname(file), { recursive: true })
+    await fs.mkdir(path.dirname(file), {recursive: true})
     await fs.writeFile(file, JSON.stringify(content))
 }
 
