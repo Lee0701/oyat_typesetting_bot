@@ -1,17 +1,13 @@
 
 import dotenv from 'dotenv'
 import * as fs from 'fs/promises'
-import { existsSync } from 'fs'
 
-import axios from 'axios'
 import { Context, Input, Telegraf } from 'telegraf'
-import { parse } from './command_parser'
-import * as Command from './command'
 import { Layer } from './layer'
 import { createCanvas } from 'canvas'
 import sharp from 'sharp'
-import { createHash } from 'crypto'
-import path from 'path'
+import * as Command from './command'
+import { getReplyToContent, invokeCommands } from './command'
 
 dotenv.config()
 
@@ -38,47 +34,6 @@ async function handleCommand(ctx: Context) {
         console.error(e)
         await ctx.reply(e.message)
     }
-}
-
-async function getReplyToContent(ctx: Context): Promise<string|null> {
-    const msg = ctx.message
-    if(!msg) return null
-    if('reply_to_message' in msg && msg.reply_to_message) {
-        if('text' in msg.reply_to_message && msg.reply_to_message.text) {
-            return msg.reply_to_message.text
-        } else if('photo' in msg.reply_to_message && msg.reply_to_message.photo) {
-            const photoIndex = msg.reply_to_message.photo.length - 1
-            const fileId = msg.reply_to_message.photo[photoIndex].file_id
-            return await getFile(ctx, fileId)
-        } else if('document' in msg.reply_to_message && msg.reply_to_message.document) {
-            const fileId = msg.reply_to_message.document.file_id
-            return await getFile(ctx, fileId)
-        }
-    }
-    return null
-}
-
-async function getFile(ctx: Context, fileId: string): Promise<string> {
-    const fileLink = await ctx.telegram.getFileLink(fileId)
-    const {data} = await axios.get(fileLink.href, {responseType: 'arraybuffer'})
-    const fileHash = createHash('sha256').update(data).digest('hex')
-    const filePath = path.join(Command.IMAGES_DIR, fileHash.substring(0, 2), fileHash)
-    await fs.mkdir(path.dirname(filePath), {recursive: true})
-    await fs.writeFile(filePath, data)
-    return fileHash
-}
-
-async function invokeCommands(ctx: Context, text: string, replyToContent: string, stack: Layer[]) {
-    const invocations: Command.CommandInvocation[] = parse(text)
-    const preprocessed = Command.preprocessCommandInvocations(invocations, replyToContent)
-    const systemCommand = await Command.handleSystemCommand(preprocessed, replyToContent)
-    if(systemCommand !== null) {
-        stack.splice(0, stack.length)
-        await ctx.reply(systemCommand)
-        return
-    }
-    const args = preprocessed[0].args
-    await Command.handleCommandInvocations(preprocessed, args, stack)
 }
 
 async function main() {

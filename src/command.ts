@@ -4,6 +4,11 @@ import * as path from 'path'
 
 import * as Commands from './commands'
 import { Layer } from './layer'
+import { Context } from 'telegraf'
+
+import { parse } from './command_parser'
+import { createHash } from 'crypto'
+import axios from 'axios'
 
 export const DATA_DIR = 'data'
 export const IMAGES_DIR = path.join(DATA_DIR, 'images')
@@ -19,11 +24,48 @@ export const PREFIX_COMMAND = '/'
 export const PREFIX_FROM_REPLY = '^'
 export const PREFIX_ARGUMENT = '$'
 
+export async function invokeCommands(ctx: Context, text: string, replyToContent: string, stack: Layer[]) {
+    const invocations: CommandInvocation[] = parse(text)
+    const preprocessed = preprocessCommandInvocations(invocations, replyToContent)
+    const systemCommand = await handleSystemCommand(preprocessed, replyToContent)
+    await systemCommand(ctx)
+    const args = preprocessed[0].args
+    await handleCommandInvocations(preprocessed, args, stack)
+}
+
+export async function getReplyToContent(ctx: Context): Promise<string|null> {
+    const msg = ctx.message
+    if(!msg) return null
+    if('reply_to_message' in msg && msg.reply_to_message) {
+        if('text' in msg.reply_to_message && msg.reply_to_message.text) {
+            return msg.reply_to_message.text
+        } else if('photo' in msg.reply_to_message && msg.reply_to_message.photo) {
+            const photoIndex = msg.reply_to_message.photo.length - 1
+            const fileId = msg.reply_to_message.photo[photoIndex].file_id
+            return await getFile(ctx, fileId)
+        } else if('document' in msg.reply_to_message && msg.reply_to_message.document) {
+            const fileId = msg.reply_to_message.document.file_id
+            return await getFile(ctx, fileId)
+        }
+    }
+    return null
+}
+
+export async function getFile(ctx: Context, fileId: string): Promise<string> {
+    const fileLink = await ctx.telegram.getFileLink(fileId)
+    const {data} = await axios.get(fileLink.href, {responseType: 'arraybuffer'})
+    const fileHash = createHash('sha256').update(data).digest('hex')
+    const filePath = path.join(IMAGES_DIR, fileHash.substring(0, 2), fileHash)
+    await fs.mkdir(path.dirname(filePath), {recursive: true})
+    await fs.writeFile(filePath, data)
+    return fileHash
+}
+
 export async function handleSystemCommand(invocations: CommandInvocation[], replyToContent: string)
-        : Promise<string|null> {
+        : Promise<(ctx: Context) => Promise<void>> {
 
     const command = invocations.shift()
-    if(!command) return null
+    if(!command) return async () => {}
     const label = command.args[0]
     const file = path.join(COMMANDS_DIR, label + USER_CMD_EXT)
     if(command.label == COMMAND_DEFINE) {
@@ -33,22 +75,32 @@ export async function handleSystemCommand(invocations: CommandInvocation[], repl
             const prefix = fileHash.substring(0, 2)
             const args = [path.join(IMAGES_DIR, prefix, fileHash)]
             await saveCommandInvocation(file, [{label, args}])
-            return PREFIX_COMMAND + (command.args.shift() as string)
+            return async (ctx: Context) => {
+                ctx.reply(PREFIX_COMMAND + command.args.shift())
+            }
         } else {
             await saveCommandInvocation(file, invocations)
-            return PREFIX_COMMAND + (command.args.shift() as string)
+            return async (ctx: Context) => {
+                ctx.reply(PREFIX_COMMAND + command.args.shift())
+            }
         }
     } else if(command.label == COMMAND_UNDEF) {
         await removeCommandInvocation(file)
-        return command.args.shift()
+        return async (ctx: Context) => {
+            ctx.reply(PREFIX_COMMAND + command.args.shift())
+        }
     } else if(command.label == COMMAND_SHOWDEF) {
-        return await makeDefinedCommandList(file)
+        return async (ctx: Context) => {
+            ctx.reply(await makeDefinedCommandList(file))
+        }
     } else if(command.label == COMMAND_LISTDEF) {
-        return Object.keys(userCommandDefinitions).join('\n')
+        return async (ctx: Context) => {
+            ctx.reply(Object.keys(userCommandDefinitions).join('\n'))
+        }
     } else {
         invocations.unshift(command)
-        return null
     }
+    return async () => {}
 }
 
 export async function handleCommandInvocations(invocations: CommandInvocation[], callArgs: any[], stack: Layer[]) {
