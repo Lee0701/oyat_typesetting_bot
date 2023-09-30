@@ -3,7 +3,7 @@ import dotenv from 'dotenv'
 import * as fs from 'fs/promises'
 import { existsSync } from 'fs'
 
-import p from 'phin'
+import axios from 'axios'
 import { Context, Input, Telegraf } from 'telegraf'
 import { parse } from './command_parser'
 import * as Command from './command'
@@ -60,13 +60,11 @@ async function getReplyToContent(ctx: Context): Promise<string|null> {
 
 async function getFile(ctx: Context, fileId: string): Promise<string> {
     const fileLink = await ctx.telegram.getFileLink(fileId)
-    const {body} = await p(fileLink.href)
-    const fileHash = createHash('sha256').update(new Uint8Array(body)).digest('hex')
+    const {data} = await axios.get(fileLink.href, {responseType: 'arraybuffer'})
+    const fileHash = createHash('sha256').update(data).digest('hex')
     const filePath = path.join(Command.IMAGES_DIR, fileHash.substring(0, 2), fileHash)
     await fs.mkdir(path.dirname(filePath), {recursive: true})
-    if(existsSync(filePath)) return filePath
-
-    await fs.writeFile(filePath, body)
+    await fs.writeFile(filePath, data)
     return fileHash
 }
 
@@ -96,7 +94,7 @@ async function main() {
     ]
     commands.forEach((command) => bot.command(command, handleCommand));
     (async () => {
-        for await (const file of fs.watch(Command.COMMANDS_DIR)) {
+        for await (const _file of fs.watch(Command.COMMANDS_DIR)) {
             await Command.loadUserCommandDefinitions()
             Command.getUserCommandDefinitions().forEach((command) => bot.command(command, handleCommand))
         }
