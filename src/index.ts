@@ -25,7 +25,7 @@ async function handleCommand(ctx: Context) {
         const g = canvas.getContext('2d')
 
         const stack: Layer[] = []
-        const replyToContent = await getReplyToContent(ctx) || Command.PREFIX_FROM_REPLY
+        const replyToContent = await getReplyToContent(ctx) || ''
         await invokeCommands(ctx, text, replyToContent, stack)
         if(stack.length == 0) return
         const result = stack.pop() as Layer

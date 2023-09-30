@@ -14,7 +14,7 @@ export class TextLayer implements Layer {
         this.text = Object.entries(ESCAPE_SEQUENCES).reduce((acc, [k, v]) => {
             const regex = new RegExp(k, 'g')
             return acc.replace(regex, v)
-        }, text)
+        }, text.toString())
         this.weight = 'normal'
         this.color = '#000000'
         this.font = 'sans-serif'

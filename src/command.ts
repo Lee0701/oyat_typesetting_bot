@@ -15,6 +15,7 @@ export const COMMAND_UNDEF = 'undef'
 export const COMMAND_SHOWDEF = 'showdef'
 export const COMMAND_LISTDEF = 'listdef'
 
+export const PREFIX_COMMAND = '/'
 export const PREFIX_FROM_REPLY = '^'
 export const PREFIX_ARGUMENT = '$'
 
@@ -32,10 +33,10 @@ export async function handleSystemCommand(invocations: CommandInvocation[], repl
             const prefix = fileHash.substring(0, 2)
             const args = [path.join(IMAGES_DIR, prefix, fileHash)]
             await saveCommandInvocation(file, [{label, args}])
-            return command.args.shift() as string
+            return PREFIX_COMMAND + (command.args.shift() as string)
         } else {
             await saveCommandInvocation(file, invocations)
-            return command.args.shift() as string
+            return PREFIX_COMMAND + (command.args.shift() as string)
         }
     } else if(command.label == COMMAND_UNDEF) {
         await removeCommandInvocation(file)
