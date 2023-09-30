@@ -11,6 +11,7 @@ import { createHash } from 'crypto'
 import axios from 'axios'
 import { createCanvas } from 'canvas'
 import sharp from 'sharp'
+import { InputFile, InputSticker } from 'telegraf/typings/core/types/typegram'
 
 export const DATA_DIR = 'data'
 export const IMAGES_DIR = path.join(DATA_DIR, 'images')
@@ -21,6 +22,8 @@ export const COMMAND_DEFINE = 'define'
 export const COMMAND_UNDEF = 'undef'
 export const COMMAND_SHOWDEF = 'showdef'
 export const COMMAND_LISTDEF = 'listdef'
+
+export const COMMAND_ADD = 'add'
 
 export const PREFIX_COMMAND = '/'
 export const PREFIX_FROM_REPLY = '^'
@@ -36,13 +39,13 @@ export async function invokeCommandInvocations(invocations: CommandInvocation[],
 
     const preprocessed = preprocessCommandInvocations(invocations, replyToContent)
     const systemCommand = await handleSystemCommand(preprocessed, replyToContent)
-    if(systemCommand != null) {
+    if(systemCommand !== null) {
         return async (ctx) => await systemCommand(ctx)
     } else {
         const args = preprocessed[0].args
         await handleCommandInvocations(preprocessed, args, stack)
         return async (ctx) => {
-            const webp = await renderCommandInvocations(stack)
+            const webp = await png2webp(await renderCommandInvocations(stack))
             await ctx.replyWithSticker(Input.fromBuffer(webp))
         }
     }
@@ -71,32 +74,69 @@ export async function handleSystemCommand(invocations: CommandInvocation[], repl
             const prefix = fileHash.substring(0, 2)
             const args = [path.join(IMAGES_DIR, prefix, fileHash)]
             await saveCommandInvocation(file, [{label, args}])
-            return async (ctx: Context) => {
+            return async (ctx) => {
                 ctx.reply(PREFIX_COMMAND + command.args.shift())
             }
         } else {
             await saveCommandInvocation(file, invocations)
-            return async (ctx: Context) => {
+            return async (ctx) => {
                 ctx.reply(PREFIX_COMMAND + command.args.shift())
             }
         }
     } else if(command.label == COMMAND_UNDEF) {
         await removeCommandInvocation(file)
-        return async (ctx: Context) => {
+        return async (ctx) => {
             ctx.reply(PREFIX_COMMAND + command.args.shift())
         }
     } else if(command.label == COMMAND_SHOWDEF) {
-        return async (ctx: Context) => {
+        return async (ctx) => {
             ctx.reply(await makeDefinedCommandList(file))
         }
     } else if(command.label == COMMAND_LISTDEF) {
-        return async (ctx: Context) => {
+        return async (ctx) => {
             ctx.reply(Object.keys(userCommandDefinitions).join('\n'))
+        }
+    } else if(command.label == COMMAND_ADD) {
+        const stack: Layer[] = []
+        const emojis = [...(command.args[1] || String.fromCodePoint(0x1F60E))] as string[]
+        const result = await invokeCommandInvocations(invocations, '', stack)
+        if(result !== null) return async (ctx) => {
+            const uid = ctx.from?.id
+            if(!uid) return
+            const username = ctx.from?.username || uid
+            const packName = `forme_${uid}_by_${ctx.me}`
+            const packTitle = `Saved forme of @${username} by @${ctx.botInfo.username}`
+            const png = await renderCommandInvocations(stack)
+
+            const file = await ctx.uploadStickerFile(Input.fromBuffer(png), 'static')
+            const sticker_format: "static" | "animated" | "video" = 'static'
+            const sticker_type: "regular" | "mask" | "custom_emoji" ='regular'
+            const sticker = {
+                sticker: file.file_id,
+                emoji_list: emojis,
+                sticker_format,
+                sticker_type,
+            }
+            try {
+                await ctx.telegram.getStickerSet(packName)
+                await ctx.addStickerToSet(packName, {sticker})
+            } catch(e) {
+                const stickers = {
+                    stickers: [sticker],
+                    sticker_format,
+                    sticker_type,
+                }
+                await ctx.createNewStickerSet(packName, packTitle, stickers)
+            }
         }
     } else {
         invocations.unshift(command)
     }
     return null
+}
+
+export async function png2webp(png: Buffer): Promise<Buffer> {
+    return await sharp(png).ensureAlpha(0).webp({lossless: true}).toBuffer()
 }
 
 export async function renderCommandInvocations(stack: Layer[]): Promise<Buffer> {
@@ -107,11 +147,7 @@ export async function renderCommandInvocations(stack: Layer[]): Promise<Buffer> 
         const result = stack.pop() as Layer
         await result.render(g)
     }
-
-    const png = canvas.toBuffer('image/png')
-    const webp = await sharp(png).ensureAlpha(0).webp({lossless: true}).toBuffer()
-
-    return webp
+    return canvas.toBuffer('image/png')
 }
 
 export async function handleCommandInvocations(invocations: CommandInvocation[], callArgs: any[], stack: Layer[]) {
@@ -232,4 +268,5 @@ const systemCommands: string[] = [
     COMMAND_UNDEF,
     COMMAND_SHOWDEF,
     COMMAND_LISTDEF,
+    COMMAND_ADD,
 ]
