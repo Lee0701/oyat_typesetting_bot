@@ -4,11 +4,13 @@ import * as path from 'path'
 
 import * as Commands from './commands'
 import { Layer } from './layer'
-import { Context } from 'telegraf'
+import { Context, Input } from 'telegraf'
 
 import { parse } from './command_parser'
 import { createHash } from 'crypto'
 import axios from 'axios'
+import { createCanvas } from 'canvas'
+import sharp from 'sharp'
 
 export const DATA_DIR = 'data'
 export const IMAGES_DIR = path.join(DATA_DIR, 'images')
@@ -24,36 +26,30 @@ export const PREFIX_COMMAND = '/'
 export const PREFIX_FROM_REPLY = '^'
 export const PREFIX_ARGUMENT = '$'
 
-export async function invokeCommands(ctx: Context, text: string, replyToContent: string, stack: Layer[]) {
-    const invocations: CommandInvocation[] = parse(text)
+export async function invokeCommand(text: string, replyToContent: string, stack: Layer[]) {
+    const parsed = parse(text)
+    return await invokeCommandInvocations(parsed, replyToContent, stack)
+}
+
+export async function invokeCommandInvocations(invocations: CommandInvocation[], replyToContent: string, stack: Layer[])
+        : Promise<((ctx: Context) => Promise<void>) | null> {
+
     const preprocessed = preprocessCommandInvocations(invocations, replyToContent)
     const systemCommand = await handleSystemCommand(preprocessed, replyToContent)
-    await systemCommand(ctx)
-    const args = preprocessed[0].args
-    await handleCommandInvocations(preprocessed, args, stack)
-}
-
-export async function getReplyToContent(ctx: Context): Promise<string|null> {
-    const msg = ctx.message
-    if(!msg) return null
-    if('reply_to_message' in msg && msg.reply_to_message) {
-        if('text' in msg.reply_to_message && msg.reply_to_message.text) {
-            return msg.reply_to_message.text
-        } else if('photo' in msg.reply_to_message && msg.reply_to_message.photo) {
-            const photoIndex = msg.reply_to_message.photo.length - 1
-            const fileId = msg.reply_to_message.photo[photoIndex].file_id
-            return await getFile(ctx, fileId)
-        } else if('document' in msg.reply_to_message && msg.reply_to_message.document) {
-            const fileId = msg.reply_to_message.document.file_id
-            return await getFile(ctx, fileId)
+    if(systemCommand != null) {
+        return async (ctx) => await systemCommand(ctx)
+    } else {
+        const args = preprocessed[0].args
+        await handleCommandInvocations(preprocessed, args, stack)
+        return async (ctx) => {
+            const webp = await renderCommandInvocations(stack)
+            await ctx.replyWithSticker(Input.fromBuffer(webp))
         }
     }
-    return null
 }
 
-export async function getFile(ctx: Context, fileId: string): Promise<string> {
-    const fileLink = await ctx.telegram.getFileLink(fileId)
-    const {data} = await axios.get(fileLink.href, {responseType: 'arraybuffer'})
+export async function getFile(fileLink: string): Promise<string> {
+    const {data} = await axios.get(fileLink, {responseType: 'arraybuffer'})
     const fileHash = createHash('sha256').update(data).digest('hex')
     const filePath = path.join(IMAGES_DIR, fileHash.substring(0, 2), fileHash)
     await fs.mkdir(path.dirname(filePath), {recursive: true})
@@ -62,10 +58,10 @@ export async function getFile(ctx: Context, fileId: string): Promise<string> {
 }
 
 export async function handleSystemCommand(invocations: CommandInvocation[], replyToContent: string)
-        : Promise<(ctx: Context) => Promise<void>> {
+        : Promise<((ctx: Context) => Promise<void>) | null> {
 
     const command = invocations.shift()
-    if(!command) return async () => {}
+    if(!command) return null
     const label = command.args[0]
     const file = path.join(COMMANDS_DIR, label + USER_CMD_EXT)
     if(command.label == COMMAND_DEFINE) {
@@ -100,7 +96,22 @@ export async function handleSystemCommand(invocations: CommandInvocation[], repl
     } else {
         invocations.unshift(command)
     }
-    return async () => {}
+    return null
+}
+
+export async function renderCommandInvocations(stack: Layer[]): Promise<Buffer> {
+    const canvas = createCanvas(512, 512)
+    const g = canvas.getContext('2d')
+
+    if(stack.length) {
+        const result = stack.pop() as Layer
+        await result.render(g)
+    }
+
+    const png = canvas.toBuffer('image/png')
+    const webp = await sharp(png).ensureAlpha(0).webp({lossless: true}).toBuffer()
+
+    return webp
 }
 
 export async function handleCommandInvocations(invocations: CommandInvocation[], callArgs: any[], stack: Layer[]) {
