@@ -11,7 +11,6 @@ import { createHash } from 'crypto'
 import axios from 'axios'
 import { createCanvas } from 'canvas'
 import sharp from 'sharp'
-import { InputFile, InputSticker } from 'telegraf/typings/core/types/typegram'
 
 export const DATA_DIR = 'data'
 export const IMAGES_DIR = path.join(DATA_DIR, 'images')
@@ -39,16 +38,19 @@ export async function invokeCommandInvocations(invocations: CommandInvocation[],
 
     const preprocessed = preprocessCommandInvocations(invocations, replyToContent)
     const systemCommand = await handleSystemCommand(preprocessed, replyToContent)
-    if(systemCommand !== null) {
-        return async (ctx) => await systemCommand(ctx)
+    if(typeof systemCommand !== 'boolean') {
+        return (ctx) => systemCommand(ctx)
     } else {
         const args = preprocessed[0].args
-        await handleCommandInvocations(preprocessed, args, stack)
-        return async (ctx) => {
-            const webp = await png2webp(await renderCommandInvocations(stack))
-            await ctx.replyWithSticker(Input.fromBuffer(webp))
+        if(systemCommand === false) {
+            await handleCommandInvocations(preprocessed, args, stack)
+            return async (ctx) => {
+                const webp = await png2webp(await renderCommandInvocations(stack))
+                await ctx.replyWithSticker(Input.fromBuffer(webp))
+            }
         }
     }
+    return null
 }
 
 export async function getFile(fileLink: string): Promise<string> {
@@ -61,13 +63,14 @@ export async function getFile(fileLink: string): Promise<string> {
 }
 
 export async function handleSystemCommand(invocations: CommandInvocation[], replyToContent: string)
-        : Promise<((ctx: Context) => Promise<void>) | null> {
+        : Promise<((ctx: Context) => Promise<void>) | boolean> {
 
     const command = invocations.shift()
-    if(!command) return null
-    const label = command.args[0]
+    if(!command) return false
+    const label: string = command.args[0]
     const file = path.join(COMMANDS_DIR, label + USER_CMD_EXT)
     if(command.label == COMMAND_DEFINE) {
+        if(!label) return false
         if(replyToContent) {
             const label = 'image'
             const fileHash = path.basename(replyToContent)
@@ -75,20 +78,22 @@ export async function handleSystemCommand(invocations: CommandInvocation[], repl
             const args = [path.join(IMAGES_DIR, prefix, fileHash)]
             await saveCommandInvocation(file, [{label, args}])
             return async (ctx) => {
-                ctx.reply(PREFIX_COMMAND + command.args.shift())
+                await ctx.reply(PREFIX_COMMAND + command.args.shift())
             }
         } else {
             await saveCommandInvocation(file, invocations)
             return async (ctx) => {
-                ctx.reply(PREFIX_COMMAND + command.args.shift())
+                await ctx.reply(PREFIX_COMMAND + command.args.shift())
             }
         }
     } else if(command.label == COMMAND_UNDEF) {
+        if(!label) return false
         await removeCommandInvocation(file)
         return async (ctx) => {
             ctx.reply(PREFIX_COMMAND + command.args.shift())
         }
     } else if(command.label == COMMAND_SHOWDEF) {
+        if(!label) return false
         return async (ctx) => {
             ctx.reply(await makeDefinedCommandList(file))
         }
@@ -97,15 +102,17 @@ export async function handleSystemCommand(invocations: CommandInvocation[], repl
             ctx.reply(Object.keys(userCommandDefinitions).join('\n'))
         }
     } else if(command.label == COMMAND_ADD) {
+        if(!label) return false
         const stack: Layer[] = []
         const emojis = [...(command.args[1] || String.fromCodePoint(0x1F60E))] as string[]
-        const result = await invokeCommandInvocations(invocations, '', stack)
+        const cmdLabel = label.charAt(0) == PREFIX_COMMAND ? label : PREFIX_COMMAND + label
+        const result = await invokeCommandInvocations(parse(cmdLabel), replyToContent, stack)
         if(result !== null) return async (ctx) => {
             const uid = ctx.from?.id
             if(!uid) return
             const username = ctx.from?.username || uid
-            const packName = `forme_${uid}_by_${ctx.me}`
-            const packTitle = `Saved forme of @${username} by @${ctx.botInfo.username}`
+            const packName = `forme_shelf_${uid}_by_${ctx.me}`
+            const packTitle = `組版受納欌 @${username} @${ctx.botInfo.username}`
             const png = await renderCommandInvocations(stack)
 
             const file = await ctx.uploadStickerFile(Input.fromBuffer(png), 'static')
@@ -127,12 +134,14 @@ export async function handleSystemCommand(invocations: CommandInvocation[], repl
                     sticker_type,
                 }
                 await ctx.createNewStickerSet(packName, packTitle, stickers)
+                await ctx.reply(`t.me/addstickers/${packName}`)
             }
         }
+        return true
     } else {
         invocations.unshift(command)
     }
-    return null
+    return false
 }
 
 export async function png2webp(png: Buffer): Promise<Buffer> {
@@ -175,6 +184,7 @@ export function preprocessCommandInvocations(invocations: CommandInvocation[], r
         : CommandInvocation[] {
 
     return invocations.map((invocation) => {
+        const label = invocation.label
         const args = invocation.args.map((arg) => {
             if(arg == PREFIX_FROM_REPLY) {
                 return replyToContent
@@ -182,7 +192,7 @@ export function preprocessCommandInvocations(invocations: CommandInvocation[], r
                 return arg
             }
         })
-        return {...invocation, args}
+        return {label, args}
     })
 }
 
@@ -218,7 +228,7 @@ export async function removeCommandInvocation(file: string): Promise<void> {
 export async function makeDefinedCommandList(file: string): Promise<string> {
     const content = await fs.readFile(file, 'utf-8')
     const invocations = JSON.parse(content) as CommandInvocation[]
-    const result = invocations.map(({label, args}) => `/${label} ${args.join(' ')}`).join('\n')
+    const result = invocations.map(({label, args}) => `${PREFIX_COMMAND}${label} ${args.join(' ')}`).join('\n')
     return result
 }
 

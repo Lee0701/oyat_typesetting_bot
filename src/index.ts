@@ -16,7 +16,7 @@ export async function handleCommand(ctx: Context) {
     try {
         const stack: Layer[] = []
         const result = await Command.invokeCommand(text, await getReplyToContent(ctx) || '', stack)
-        if(result != null) result(ctx)
+        if(result !== null) result(ctx)
     } catch(e: any) {
         console.error(e)
         await ctx.reply(e.message)
