@@ -22,7 +22,7 @@ export const COMMAND_UNDEF = 'undef'
 export const COMMAND_SHOWDEF = 'showdef'
 export const COMMAND_LISTDEF = 'listdef'
 
-export const COMMAND_ADD = 'add'
+export const COMMAND_SAVE = 'save'
 
 export const PREFIX_COMMAND = '/'
 export const PREFIX_FROM_REPLY = '^'
@@ -101,7 +101,7 @@ export async function handleSystemCommand(invocations: CommandInvocation[], repl
         return async (ctx) => {
             ctx.reply(Object.keys(userCommandDefinitions).join('\n'))
         }
-    } else if(command.label == COMMAND_ADD) {
+    } else if(command.label == COMMAND_SAVE) {
         if(!label) return false
         const stack: Layer[] = []
         const emojis = [...(command.args[1] || String.fromCodePoint(0x1F60E))] as string[]
@@ -281,5 +281,5 @@ const systemCommands: string[] = [
     COMMAND_UNDEF,
     COMMAND_SHOWDEF,
     COMMAND_LISTDEF,
-    COMMAND_ADD,
+    COMMAND_SAVE,
 ]
