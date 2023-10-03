@@ -53,18 +53,18 @@ async function main() {
     const bot = new Telegraf(token)
     await Command.loadUserCommandDefinitions()
     const commands = [
-        Command.getUserCommandDefinitions(),
-        Command.getSystemCommands(),
-        Command.getInternalCommands(),
+        ...Command.getUserCommandDefinitions(),
+        ...Command.getSystemCommands(),
+        ...Command.getInternalCommands(),
     ]
-    commands.forEach((command) => bot.command(command, handleCommand));
+    commands.forEach((command) => bot.command(command, handleCommand))
+    bot.launch();
     (async () => {
         for await (const _file of fs.watch(Command.COMMANDS_DIR)) {
             await Command.loadUserCommandDefinitions()
             Command.getUserCommandDefinitions().forEach((command) => bot.command(command, handleCommand))
         }
     })()
-    bot.launch()
 }
 
 if(require.main == module) main()

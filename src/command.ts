@@ -160,6 +160,9 @@ export async function renderCommandInvocations(stack: Layer[]): Promise<Buffer> 
 }
 
 export async function handleCommandInvocations(invocations: CommandInvocation[], callArgs: any[], stack: Layer[]) {
+    if(stack.length >= 100) {
+        throw new Error('too many layers')
+    }
     for(const invocation of invocations) {
         const label = invocation.label
         const args = invocation.args.map((arg) => {
